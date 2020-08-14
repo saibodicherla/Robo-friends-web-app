@@ -1,0 +1,12 @@
+@import url('https://fonts.googleapis.com/css?family=Plaster|Roboto+Mono&display=swap');
+
+.card {
+    top: 20;
+  }
+  
+  .tc h1 {
+    text-transform: uppercase;
+    font-family: 'Playball', cursive;
+    font-size: 60px;
+    color: #3F250B;
+  }

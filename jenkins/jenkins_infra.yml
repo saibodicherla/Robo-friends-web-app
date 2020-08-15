@@ -1,0 +1,179 @@
+Description: >
+  Saikumar Bodicherla / Capstone Project
+
+Parameters:
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resources
+    Type: String
+    Default: JenkinsInfra
+
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation)
+    Type: String
+    Default: 10.0.0.0/16
+
+  PublicSubnetCIDR:
+    Description: Please enter the IP range (CIDR notation) for the Subnet
+    Type: String
+    Default: 10.0.0.0/24
+
+Resources:
+
+    VPC: 
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: !Ref VpcCIDR
+            EnableDnsHostnames: true
+            Tags: 
+                - Key: Name 
+                  Value: !Ref EnvironmentName
+            
+    InternetGateway:
+        Type: AWS::EC2::InternetGateway
+        Properties:
+            Tags:
+                - Key: Name
+                  Value: !Ref EnvironmentName
+            
+    InternetGatewayAttachment:
+        Type: AWS::EC2::VPCGatewayAttachment
+        Properties:
+            InternetGatewayId: !Ref InternetGateway
+            VpcId: !Ref VPC
+
+    PublicSubnet: 
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref VPC
+            AvailabilityZone: !Select [ 0, !GetAZs '' ]
+            CidrBlock: !Ref PublicSubnetCIDR
+            MapPublicIpOnLaunch: true
+            Tags: 
+                - Key: Name 
+                  Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+
+    PublicRouteTable:
+        Type: AWS::EC2::RouteTable
+        Properties: 
+            VpcId: !Ref VPC
+            Tags: 
+                - Key: Name 
+                  Value: !Sub ${EnvironmentName} Public Routes
+
+    DefaultPublicRoute: 
+        Type: AWS::EC2::Route
+        DependsOn: InternetGatewayAttachment
+        Properties: 
+            RouteTableId: !Ref PublicRouteTable
+            DestinationCidrBlock: 0.0.0.0/0
+            GatewayId: !Ref InternetGateway
+
+    PublicSubnetRouteTableAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            RouteTableId: !Ref PublicRouteTable
+            SubnetId: !Ref PublicSubnet
+
+    JenkinsServerSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: Allow http to our hosts and SSH from local only
+            VpcId: !Ref VPC
+            SecurityGroupIngress: 
+                - IpProtocol: tcp
+                  FromPort: 8080
+                  ToPort: 8080
+                  CidrIp: 0.0.0.0/0
+                - IpProtocol: tcp
+                  FromPort: 22
+                  ToPort: 22
+                  CidrIp: 0.0.0.0/0
+            SecurityGroupEgress: 
+                - IpProtocol: tcp
+                  FromPort: 0
+                  ToPort: 65535
+                  CidrIp: 0.0.0.0/0
+
+    JenkinsServerLaunchConfig:
+        Type: AWS::AutoScaling::LaunchConfiguration
+        Properties:
+            UserData:
+                Fn::Base64: !Sub |
+                    #!/bin/bash
+                    # Install Jenkins
+                    apt update 
+                    apt upgrade
+                    apt install default-jdk
+                    wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+                    sudo sh -c 'echo deb https://pkg.jenkins.io/debian binary/ > /etc/apt/sources.list.d/jenkins.list'
+                    sudo apt update
+                    sudo apt install jenkins
+                    sudo systemctl status jenkins
+                    # Install AWS CLI version 2
+                    apt-get install unzip -y
+                    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+                    unzip /tmp/awscliv2.zip
+                    ./aws/install -i /usr/local/aws-cli -b /usr/bin
+                    aws --version
+                    # Install eksctl CLI
+                    curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+                    mv /tmp/eksctl /usr/local/bin
+                    eksctl version
+                    # Install kubectl CLI
+                    curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+                    chmod +x ./kubectl
+                    mv ./kubectl /usr/local/bin/kubectl
+                    # Install Docker
+                    apt-get update -y
+                    apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+                    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+                    apt-key fingerprint 0EBFCD88
+                    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+                    apt-get update -y
+                    apt-get install -y docker-ce docker-ce-cli containerd.io
+                    #Install Hadolint 
+                    wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.18.0/hadolint-Linux-x86_64 &&\
+                    chmod +x /bin/hadolint
+                    # Install Tidy
+                    apt-get update -y
+                    apt-get install -y tidy
+                    # Add jenkins user tp docker group
+                    usermod -aG docker jenkins
+                    # Restart Jenkins
+                    systemctl restart jenkins
+            ImageId: ami-07ee42ba0209b6d77
+            SecurityGroups:
+                - Ref: JenkinsServerSecurityGroup
+            InstanceType: t2.micro
+            KeyName: Jenkins_key # key pair name 
+
+    JenkinsGroup:
+        Type: AWS::AutoScaling::AutoScalingGroup
+        Properties:
+            VPCZoneIdentifier:
+                - !Ref PublicSubnet
+            LaunchConfigurationName:
+                Ref: JenkinsServerLaunchConfig
+            MinSize: "1"
+            MaxSize: "2"
+
+
+Outputs: 
+
+    VPC: 
+        Description: A reference to the created VPC
+        Value: !Ref VPC
+        Export:
+          Name: !Sub ${EnvironmentName}-VPCID
+
+    VPCPublicRouteTable:
+        Description: Public Routing
+        Value: !Ref PublicRouteTable
+        Export:
+          Name: !Sub ${EnvironmentName}-PUB-RT
+
+    PublicSubnet:
+        Description: A reference to the public subnet in the 1st Availability Zone
+        Value: !Ref PublicSubnet
+        Export:
+          Name: !Sub ${EnvironmentName}-PUB-SN

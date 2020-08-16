@@ -53,7 +53,7 @@ pipeline {
         steps {
             withAWS(region:'eu-west-1',credentials:'capstone-project') {
                 sh "aws eks update-kubeconfig --name robo --region eu-west-1"
-                sh "kubectl apply -f Infra/app-deployment.yml"
+                sh "kubectl apply -f Infra/appDeployment.yml"
                 sh "kubectl get deployments"
                 sh "kubectl get pods"
                 sh "kubectl get services -o wide"

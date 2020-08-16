@@ -15,7 +15,6 @@ pipeline {
 
     stage('Build Docker Image') {
         steps {
-                sh "sudo usermod -a -G docker $USER"
                 sh "docker build -t robo ."
             }
         }
@@ -23,7 +22,7 @@ pipeline {
     stage('Push Image to AWS ECR') {
         steps {
             script {
-                docker.withRegistry('https: //982641132963.dkr.ecr.eu-west-1.amazonaws.com', 'ecr:eu-west-1:capstone-project' ) {
+                docker.withRegistry('https: //982641132963.dkr.ecr.eu-west-1.amazonaws.com', 'ecr:eu-west-1:capstone-project') {
                   docker.image('robo').push('latest')  
                     }
                 }  

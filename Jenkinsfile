@@ -7,16 +7,6 @@ pipeline {
             }
         }
 
-    stage('Lint JavaScript') {
-        steps {
-            sh '''
-                cd app
-                npm install
-                npm run lint
-                '''
-             }
-        }
-
     stage('Lint Dockerfile') {
         steps {
             sh "hadolint --ignore DL3006 ..Docker/Dockerfile"

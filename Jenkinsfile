@@ -15,19 +15,17 @@ pipeline {
 
     stage('Build Docker Image') {
         steps {
+                sh "sudo usermod -a -G docker $USER"
                 sh "docker build -t robo ."
             }
         }
     
     stage('Push Image to AWS ECR') {
         steps {
-            script{
-                docker. withRegistry ('https: //982641132963.dkr.ecr.eu-west-1.amazonaws.com', 'ecr:eu-west-1:982641132963' ) {
-                    sh "docker tag robo:latest 982641132963.dkr.ecr.eu-west-1.amazonaws.com/robo:latest"
-                    sh "docker push 982641132963.dkr.ecr.eu-west-1.amazonaws.com/robo:latest"
+                docker. withRegistry ('https: //982641132963.dkr.ecr.eu-west-1.amazonaws.com', 'ecr:eu-west-1:capstone-project' ) {
+                  docker.image('robo').push('latest')  
                     }
-                }        
-            }
+                }       
         }
     
     stage('Create Kubernetes Cluster') {

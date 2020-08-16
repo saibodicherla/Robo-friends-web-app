@@ -44,7 +44,7 @@ pipeline {
     stage('Create a EKS Cluster') {
         steps {
             withAWS(region:'eu-west-1',credentials:'capstone-project') {
-              sh "eksctl create cluster --name prod --version 1.17 --region eu-west-1 --nodegroup-name standard-workers --node-type t3.micro --nodes 2 --nodes-min 1 --nodes-max 4 --managed" 
+              sh "eksctl create cluster --name robo --version 1.17 --region eu-west-1 --nodegroup-name standard-workers --node-type t3.micro --nodes 2 --nodes-min 1 --nodes-max 4 --managed" 
                 }
             }
         }
@@ -52,7 +52,7 @@ pipeline {
     stage('Deploy Container on EKS Cluster') {
         steps {
             withAWS(region:'eu-west-1',credentials:'capstone-project') {
-                sh "aws eks update-kubeconfig --name prod --region eu-west-1"
+                sh "aws eks update-kubeconfig --name robo --region eu-west-1"
                 sh "kubectl apply -f Infra/app-deployment.yml"
                 sh "kubectl get deployments"
                 sh "kubectl get pods"

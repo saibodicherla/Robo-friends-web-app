@@ -1,4 +1,4 @@
-# :building_construction: Build a CI/CD pipeline for a Robo-friends application using rolling deployment strategy
+# :building_construction: CI/CD pipeline for Robo-friends application using rolling deployment strategy
 
 ##  Project Description 📝
 

@@ -22,8 +22,8 @@ pipeline {
     stage('Push Image to AWS ECR') {
         steps {
             script {
-                docker.withRegistry('https: //982641132963.dkr.ecr.eu-west-1.amazonaws.com', 'ecr:eu-west-1:capstone-project') {
-                  docker.image('robo').push('latest')  
+                docker.withRegistry('', 'ecr:eu-west-1:capstone-project') {
+                  sh "docker push 982641132963.dkr.ecr.eu-west-1.amazonaws.com/robo:latest" 
                     }
                 }  
             }        

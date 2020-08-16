@@ -42,15 +42,13 @@ Test your environment using Kubectl and eksctl
 
  ### Project Folder structure 🗃
 
-## A typical top-level directory layout
-
 .
-├── Dockerfile             # (Build an image of  the app to be published in AWS Elastic Container Registry`ECR`)
+├── Dockerfile                         # Build an image of  the app to be published in AWS Elastic Container Registry`ECR`
 ├── Infra
-│   └── appDeployment.yml  # (Deploy the ECR in AWS Elastic Kubernetes Service`Eks`)
-├── Jenkinsfile            # (Setup CI/CD pipeline that will automate the deployment using Jenkins and Deploy into AWS EKS)
+│   └── appDeployment.yml              # Deploy the ECR in AWS Elastic Kubernetes Service`Eks`
+├── Jenkinsfile                        # Setup CI/CD pipeline that will automate the deployment using Jenkins and Deploy into AWS EKS
 ├── README.md
-├── jenkins                # (Created AWS infrastructure for `Jenkins`)
+├── jenkins                            # Created AWS infrastructure for `Jenkins`
 │   ├── create.sh
 │   ├── jenkins-parameters.json
 │   ├── jenkins_infra.yml
@@ -74,10 +72,3 @@ Test your environment using Kubectl and eksctl
     ├── index.css
     ├── index.js
     └── serviceWorker.js
-
-
-
-Continuous Integration you will set up Continuous Deployment, which will include:
-
-Pushing the built Docker container(s) to the Docker repository (you can use AWS ECR, create your own custom Registry within your cluster, or another 3rd party Docker repository) ; and
-Deploying these Docker container(s) to a small Kubernetes cluster. For your Kubernetes cluster you can either use AWS Kubernetes as a Service, or build your own Kubernetes cluster. To deploy your Kubernetes cluster, use either Ansible or Cloudformation. Preferably, run these from within Jenkins as an independent pipeline.

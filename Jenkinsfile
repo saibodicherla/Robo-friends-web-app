@@ -1,5 +1,14 @@
 pipeline {
   agent any
+  environment
+  {
+
+      VERSION = "${BUILD_NUMBER}"
+      PROJECT = 'robo'
+      IMAGE = "$PROJECT:$VERSION"
+      ECRURL = 'https://982641132963.dkr.ecr.eu-west-1.amazonaws.com/robo'
+      ECRCRED = 'ecr:eu-west-1:capstone-project'
+  }
   stages {
     stage('Git checkout') {
         steps {
@@ -15,21 +24,24 @@ pipeline {
 
     stage('Build Docker Image') {
         steps {
-                sh "docker build -t robo ."
+            script{
+                docker.build('$IMAGE')
+                }
             }
         }
     
-    stage('Push Image to AWS ECR') {
+    stage('Push Image to ECR') {
         steps {
-            script {
-                docker.withRegistry('', 'ecr:eu-west-1:capstone-project') {
-                  sh "docker push 982641132963.dkr.ecr.eu-west-1.amazonaws.com/robo:latest" 
-                    }
+            script {        
+                    docker.withRegistry(ECRURL, ECRCRED) 
+                    {
+                        docker.image(IMAGE).push()
+                    }                  
                 }  
             }        
         }
     
-    stage('Create Kubernetes Cluster') {
+    stage('Create a EKS Cluster') {
         steps {
             withAWS(region:'eu-west-1',credentials:'capstone-project') {
               sh "eksctl create cluster --name prod --version 1.17 --region eu-west-1 --nodegroup-name standard-workers --node-type t3.micro --nodes 2 --nodes-min 1 --nodes-max 4 --managed" 

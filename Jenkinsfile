@@ -9,7 +9,7 @@ pipeline {
 
     stage('Lint Dockerfile') {
         steps {
-            sh "hadolint --ignore DL3006 ..Docker/Dockerfile"
+            sh "hadolint --ignore DL3006 ./Dockerfile"
             }
         }
 

@@ -1,68 +1,83 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# :building_construction: Build a CI/CD pipeline for a Robo-friends application using rolling deployment strategy
 
-## Available Scripts
+##  Project Description 📝
 
-In the project directory, you can run:
+- Build an web application that lets you search between Robots API and generates robots by name.
+- Build an automated CI-CD pipeline that deploys a React.js application into a Kubernetes cluster in a rolling deployment fashion hosted with AWS EKS & ECR.
+- Every code change pushed into this repository is validated by a Jenkins.
 
-### `yarn start`
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Setup the Environment ⚙️
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
 
-### `yarn test`
+In order to run this project, you need to have AWS Account, AWS CLI, Docker, eksctl, kubectl.
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+* If you don't have a AWS Account.[Create using this link](https://portal.aws.amazon.com/billing/signup?nc2=h_ct&src=header_signup&redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start)
+* use the [AWS CLI version 2] (https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) to install
 
-### `yarn build`
+After setting up the enviroment, you need to run
+   
+```bash
+> aws --version
+```
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+* Install AWS [eksctl] (https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html)
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
+Test your environment using Kubectl and eksctl
+   
+```bash
+> kubectl version --short --client
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+> eksctl version
+```
 
-### `yarn eject`
+* Finally, You need to also install [Docker] (https://docs.docker.com/engine/install/ubuntu/)
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```bash
+> docker -v
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+ ### Project Folder structure 🗃
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## A typical top-level directory layout
 
-## Learn More
+.
+├── Dockerfile             # (Build an image of  the app to be published in AWS Elastic Container Registry`ECR`)
+├── Infra
+│   └── appDeployment.yml  # (Deploy the ECR in AWS Elastic Kubernetes Service`Eks`)
+├── Jenkinsfile            # (Setup CI/CD pipeline that will automate the deployment using Jenkins and Deploy into AWS EKS)
+├── README.md
+├── jenkins                # (Created AWS infrastructure for `Jenkins`)
+│   ├── create.sh
+│   ├── jenkins-parameters.json
+│   ├── jenkins_infra.yml
+│   └── update.sh
+├── package-lock.json
+├── package.json
+├── public
+│   ├── favicon.ico
+│   ├── index.html
+│   └── manifest.json
+└── src
+    ├── App.test.js
+    ├── components
+    │   ├── Card.js
+    │   ├── CardList.js
+    │   ├── Scroll.js
+    │   └── SearchBox.js
+    ├── containers
+    │   ├── App.css
+    │   └── App.js
+    ├── index.css
+    ├── index.js
+    └── serviceWorker.js
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-To learn React, check out the [React documentation](https://reactjs.org/).
 
-### Code Splitting
+Continuous Integration you will set up Continuous Deployment, which will include:
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
-
-### Analyzing the Bundle Size
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
-
-### Making a Progressive Web App
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
-
-### Advanced Configuration
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
-
-### Deployment
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `yarn build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+Pushing the built Docker container(s) to the Docker repository (you can use AWS ECR, create your own custom Registry within your cluster, or another 3rd party Docker repository) ; and
+Deploying these Docker container(s) to a small Kubernetes cluster. For your Kubernetes cluster you can either use AWS Kubernetes as a Service, or build your own Kubernetes cluster. To deploy your Kubernetes cluster, use either Ansible or Cloudformation. Preferably, run these from within Jenkins as an independent pipeline.
